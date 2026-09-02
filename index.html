@@ -9,9 +9,35 @@
     </style>
   </head>
   <body>
-    <div class="login" id="login"><div class="login-card"><h1>打卡日曆</h1><p>Zhen × Ting</p><input id="email" type="email" placeholder="電子郵件" autocomplete="username"><input id="password" type="password" placeholder="密碼" autocomplete="current-password"><button id="loginBtn">登入</button><div class="error" id="loginError"></div></div></div>
-<div class="pages" id="pages"><section class="page daily" id="dailyPage"><div class="year" id="dailyYear"></div><div class="date" id="dailyDate"></div><div class="account"><div><b id="accountName">登入中</b><span class="sync" id="syncState"></span></div><button class="logout" id="logoutBtn">登出</button></div><div class="task-box" id="taskBox"></div><button class="add" id="addBtn">＋ 新增事項</button><div class="hint">← 往左滑看月曆</div></section>
-<section class="page calendar"><div class="calendar-head"><button class="month" id="prev">‹</button><div class="calendar-title" id="calendarTitle"></div><button class="month" id="next">›</button></div><div class="week"><div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div></div><div class="calendar-grid" id="calendarGrid"></div><div class="legend"><div><i></i>Zhen's打卡</div><div><i class="light"></i>Ting's打卡</div></div><div class="hint">往右滑回單日 →</div></section></div>
+    <div class="login" id="login">
+      <div class="login-card">
+        <h1>打卡日曆</h1>
+        <p>Zhen × Ting</p>
+        <input id="email" type="email" placeholder="電子郵件" autocomplete="username">
+        <input id="password" type="password" placeholder="密碼" autocomplete="current-password">
+        <button id="loginBtn">登入</button>
+        <div class="error" id="loginError"></div>
+      </div>
+    </div>
+    <div class="pages" id="pages">
+      <section class="page daily" id="dailyPage">
+        <div class="year" id="dailyYear"></div>
+        <div class="date" id="dailyDate"></div>
+        <div class="account">
+          <div>
+            <b id="accountName">登入中</b>
+            <span class="sync" id="syncState"></span>
+          </div>
+          <button class="logout" id="logoutBtn">登出</button>
+        </div>
+        <div class="task-box" id="taskBox"></div>
+        <button class="add" id="addBtn">＋ 新增事項</button>
+        <div class="hint">← 往左滑看月曆</div>
+      </section>
+      <section class="page calendar">
+        <div class="calendar-head">
+          <button class="month" id="prev">‹</button>
+          <div class="calendar-title" id="calendarTitle"></div><button class="month" id="next">›</button></div><div class="week"><div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div></div><div class="calendar-grid" id="calendarGrid"></div><div class="legend"><div><i></i>Zhen's打卡</div><div><i class="light"></i>Ting's打卡</div></div><div class="hint">往右滑回單日 →</div></section></div>
 <div class="overlay" id="taskModal"><div class="modal"><div class="modal-head">新增事項<button class="close" id="closeModal">×</button></div><div class="grid"><div class="row"><label>Emoji</label><input id="fEmoji" value="🚶" maxlength="4"></div><div class="row"><label>事項名稱</label><input id="fName" placeholder="例如：走路" maxlength="20"></div></div><div class="row"><label>小提醒</label><input id="fDesc" placeholder="例如：每次 1000 步" maxlength="40"></div><div class="grid"><div class="row"><label>顏色</label><input class="color" id="fColor" type="color" value="#f59e0b"></div><div class="row"><label>紀錄方式</label><select id="fType"><option value="check">完成／未完成</option><option value="counter">＋／－累計</option></select></div></div><div class="counter-fields" id="counterFields"><div class="grid"><div class="row"><label>每次增加</label><input id="fStep" type="number" min="1" value="1000"></div><div class="row"><label>單位</label><input id="fUnit" value="步" maxlength="8"></div></div><div class="row"><label>最多按幾次</label><input id="fMax" type="number" min="1" max="99" value="20"></div></div><button class="save" id="saveTask">新增</button><div class="note">Zhen 的月曆點是 100%，Ting 會自動顯示成 50%。</div></div></div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
