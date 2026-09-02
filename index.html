@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>雙人打卡日曆</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, "Noto Sans TC", sans-serif; background: #f7f7f7; overflow: hidden; }
+    button { font: inherit; touch-action: manipulation; }
+    .pages { width: 100vw; height: 100dvh; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; }
+    .pages::-webkit-scrollbar { display: none; }
+    .page { min-width: 100vw; width: 100vw; height: 100dvh; overflow-y: auto; scroll-snap-align: start; padding: 28px 20px; }
+    .daily-page { background: #fffdf7; }
+    .year { font-size: 16px; color: #777; margin-bottom: 4px; }
+    .date { font-size: 42px; font-weight: 700; margin-bottom: 18px; }
+    .person-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; margin-bottom: 18px; border-radius: 15px; background: #eeeae2; }
+    .person-button { border: 0; border-radius: 11px; padding: 10px; color: #777; background: transparent; cursor: pointer; }
+    .person-button.active { color: #222; font-weight: 700; background: white; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .person-button.sister.active { opacity: .65; }
+    .task-box { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 18px rgba(0,0,0,.07); }
+    .task { min-height: 68px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #eee; }
+    .task:last-child { border-bottom: none; }
+    .task-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .red { background: #ff5a5a; }
+    .green { background: #79c85b; }
+    .purple { background: #a45ac7; }
+    .task-main { flex: 1; }
+    .task-title { font-size: 17px; font-weight: 600; }
+    .task-description { margin-top: 3px; color: #999; font-size: 13px; }
+    .check-button { width: 34px; height: 34px; border-radius: 10px; border: 2px solid #ddd; background: white; font-size: 18px; cursor: pointer; }
+    .check-button.done { background: #222; border-color: #222; color: white; }
+    .viewing-sister .check-button.done { opacity: .5; }
+    .water-controls { display: flex; align-items: center; gap: 7px; }
+    .water-button { width: 32px; height: 32px; border: none; border-radius: 9px; background: #eee; font-size: 18px; cursor: pointer; }
+    .water-count { min-width: 28px; text-align: center; font-weight: bold; }
+    .swipe-hint { text-align: center; margin-top: 28px; color: #aaa; font-size: 13px; }
+    .calendar-page { background: #f5f9ff; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+    .calendar-title { font-size: 30px; font-weight: bold; }
+    .month-button { border: none; background: white; width: 38px; height: 38px; border-radius: 12px; font-size: 19px; box-shadow: 0 3px 12px rgba(0,0,0,.07); cursor: pointer; }
+    .weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .weekday { text-align: center; font-size: 13px; color: #888; padding-bottom: 12px; }
+    .calendar-grid { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,.06); }
+    .calendar-day { position: relative; height: 72px; padding: 7px; border-right: 1px solid #eee; border-bottom: 1px solid #eee; cursor: pointer; }
+    .calendar-day:nth-child(7n) { border-right: none; }
+    .calendar-day.empty { background: #fafafa; cursor: default; }
+    .calendar-day.selected { background: #edf5ff; }
+    .day-number { font-size: 13px; font-weight: 600; }
+    .dots { position: absolute; left: 7px; right: 5px; bottom: 7px; display: flex; flex-wrap: wrap; gap: 3px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; }
+    .dot.me { opacity: 1; }
+    .dot.sister { opacity: .5; }
+    .legend { display: flex; justify-content: center; gap: 18px; margin-top: 16px; color: #777; font-size: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
+    .legend-dot.sister { opacity: .5; }
+    @media (max-width: 500px) {
+      .page { padding: 24px 16px; }
+      .calendar-day { height: 62px; }
+      .date { font-size: 38px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="pages" id="pages">
+    <section class="page daily-page" id="dailyPage">
+      <div class="year" id="dailyYear"></div>
+      <div class="date" id="dailyDate"></div>
+      <div class="person-switch" aria-label="選擇打卡的人">
+        <button class="person-button active" id="meButton" onclick="selectPerson('me')">我</button>
+        <button class="person-button sister" id="sisterButton" onclick="selectPerson('sister')">妹妹</button>
+      </div>
+      <div class="task-box">
+        <div class="task">
+          <div class="task-dot red"></div>
+          <div class="task-main"><div class="task-title">☀️ 擦防曬</div><div class="task-description">今天有乖乖擦防曬嗎</div></div>
+          <button class="check-button" id="sunscreenButton" onclick="toggleTask('sunscreen')" aria-label="切換防曬打卡"></button>
+        </div>
+        <div class="task">
+          <div class="task-dot green"></div>
+          <div class="task-main"><div class="task-title">📖 讀書</div><div class="task-description">讀書 1 小時</div></div>
+          <button class="check-button" id="studyButton" onclick="toggleTask('study')" aria-label="切換讀書打卡"></button>
+        </div>
+        <div class="task">
+          <div class="task-dot purple"></div>
+          <div class="task-main"><div class="task-title">🚰 喝水</div><div class="task-description">一次代表 700 cc</div></div>
+          <div class="water-controls">
+            <button class="water-button" onclick="changeWater(-1)" aria-label="減少喝水次數">−</button>
+            <div class="water-count" id="waterCount">0</div>
+            <button class="water-button" onclick="changeWater(1)" aria-label="增加喝水次數">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="swipe-hint">← 往左滑看月曆</div>
+    </section>
+
+    <section class="page calendar-page">
+      <div class="calendar-header">
+        <button class="month-button" onclick="changeMonth(-1)" aria-label="上個月">‹</button>
+        <div class="calendar-title" id="calendarTitle"></div>
+        <button class="month-button" onclick="changeMonth(1)" aria-label="下個月">›</button>
+      </div>
+      <div class="weekdays">
+        <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot"></span>我的打卡</div>
+        <div class="legend-item"><span class="legend-dot sister"></span>妹妹的打卡</div>
+      </div>
+      <div class="swipe-hint">往右滑回單日 →</div>
+    </section>
+  </div>
+
+  <script>
+    const today = new Date();
+    let selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    let calendarYear = selectedDate.getFullYear();
+    let calendarMonth = selectedDate.getMonth();
+    let selectedPerson = "me";
+    let records = JSON.parse(localStorage.getItem("checkinRecords")) || {};
+
+    function blankPersonRecord() { return { sunscreen: false, study: false, water: 0 }; }
+
+    function normalizeRecord(record) {
+      if (record && record.me && record.sister) return record;
+      return {
+        me: record ? {
+          sunscreen: Boolean(record.sunscreen),
+          study: Boolean(record.study),
+          water: Math.max(0, Math.min(2, Number(record.water) || 0))
+        } : blankPersonRecord(),
+        sister: blankPersonRecord()
+      };
+    }
+
+    Object.keys(records).forEach(key => { records[key] = normalizeRecord(records[key]); });
+    saveRecords();
+
+    function saveRecords() { localStorage.setItem("checkinRecords", JSON.stringify(records)); }
+
+    function getDateKey(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function getSelectedDayRecord() {
+      const key = getDateKey(selectedDate);
+      records[key] = normalizeRecord(records[key]);
+      return records[key];
+    }
+
+    function getSelectedPersonRecord() { return getSelectedDayRecord()[selectedPerson]; }
+
+    function selectPerson(person) {
+      selectedPerson = person;
+      renderDailyPage();
+    }
+
+    function renderDailyPage() {
+      document.getElementById("dailyYear").textContent = selectedDate.getFullYear();
+      document.getElementById("dailyDate").textContent = `${selectedDate.getMonth() + 1}/${selectedDate.getDate()}`;
+      document.getElementById("meButton").classList.toggle("active", selectedPerson === "me");
+      document.getElementById("sisterButton").classList.toggle("active", selectedPerson === "sister");
+      document.getElementById("dailyPage").classList.toggle("viewing-sister", selectedPerson === "sister");
+      const record = getSelectedPersonRecord();
+      setCheckButton("sunscreenButton", record.sunscreen);
+      setCheckButton("studyButton", record.study);
+      document.getElementById("waterCount").textContent = record.water;
+    }
+
+    function setCheckButton(id, done) {
+      const button = document.getElementById(id);
+      button.textContent = done ? "✓" : "";
+      button.classList.toggle("done", done);
+    }
+
+    function toggleTask(taskName) {
+      const record = getSelectedPersonRecord();
+      record[taskName] = !record[taskName];
+      saveRecords();
+      renderDailyPage();
+      renderCalendar();
+    }
+
+    function changeWater(change) {
+      const record = getSelectedPersonRecord();
+      record.water = Math.max(0, Math.min(2, record.water + change));
+      saveRecords();
+      renderDailyPage();
+      renderCalendar();
+    }
+
+    function addDot(container, color, person) {
+      const dot = document.createElement("div");
+      dot.className = `dot ${color} ${person}`;
+      container.appendChild(dot);
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById("calendarGrid");
+      grid.innerHTML = "";
+      document.getElementById("calendarTitle").textContent = `${calendarYear}.${calendarMonth + 1}`;
+      const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+      const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement("div");
+        empty.className = "calendar-day empty";
+        grid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(calendarYear, calendarMonth, day);
+        const record = records[getDateKey(date)] ? normalizeRecord(records[getDateKey(date)]) : null;
+        const dayBox = document.createElement("div");
+        dayBox.className = "calendar-day";
+        if (selectedDate.getFullYear() === calendarYear && selectedDate.getMonth() === calendarMonth && selectedDate.getDate() === day) dayBox.classList.add("selected");
+
+        const number = document.createElement("div");
+        number.className = "day-number";
+        number.textContent = day;
+        dayBox.appendChild(number);
+
+        const dots = document.createElement("div");
+        dots.className = "dots";
+        if (record) {
+          if (record.me.sunscreen) addDot(dots, "red", "me");
+          if (record.sister.sunscreen) addDot(dots, "red", "sister");
+          if (record.me.study) addDot(dots, "green", "me");
+          if (record.sister.study) addDot(dots, "green", "sister");
+          if (record.me.water > 0) addDot(dots, "purple", "me");
+          if (record.sister.water > 0) addDot(dots, "purple", "sister");
+        }
+        dayBox.appendChild(dots);
+
+        dayBox.addEventListener("click", () => {
+          selectedDate = new Date(calendarYear, calendarMonth, day);
+          renderDailyPage();
+          renderCalendar();
+          document.getElementById("pages").scrollTo({ left: 0, behavior: "smooth" });
+        });
+        grid.appendChild(dayBox);
+      }
+    }
+
+    function changeMonth(change) {
+      calendarMonth += change;
+      if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+      if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+      renderCalendar();
+    }
+
+    renderDailyPage();
+    renderCalendar();
+  </script>
+</body>
+</html>
