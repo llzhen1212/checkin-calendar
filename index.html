@@ -115,24 +115,70 @@
     </div>
     <script type="module">
       import{initializeApp}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-      import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-      import{getFirestore,doc,collection,getDoc,setDoc,updateDoc,onSnapshot}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-      const firebaseConfig={apiKey:"AIzaSyAWbob6j02jTCAaFVqBsWoWxwekRS4Br8E",authDomain:"couple-daily-tracker.firebaseapp.com",projectId:"couple-daily-tracker",storageBucket:"couple-daily-tracker.firebasestorage.app",messagingSenderId:"566590935557",appId:"1:566590935557:web:13c0f91a0f20a8f4e1026c"};
-      const USERS={"lAX05vlJA5bPkJElqXBcjWXBE3S2":{key:"me",name:"Zhen"},"SNJ4fIBT8IRHC9UUWIBpnEsaFfm2":{key:"sister",name:"Ting"}};
-      const DEFAULT_TASKS=[{id:"sunscreen",emoji:"☀️",name:"擦防曬",description:"會曬黑噢",color:"#ff5a5a",type:"check",builtIn:true},{id:"study",emoji:"📖",name:"讀書",description:"讀書1小時",color:"#79c85b",type:"check",builtIn:true},{id:"water",emoji:"🚰",name:"喝水",description:"700 c.c.",color:"#a45ac7",type:"counter",step:700,unit:"c.c.",max:2,builtIn:true}];
-      const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),tasksRef=doc(db,"shared","tasks");
-      const $=id=>document.getElementById(id);let tasks=DEFAULT_TASKS,records={},person=null,selectedDate=new Date(),calendarYear=selectedDate.getFullYear(),calendarMonth=selectedDate.getMonth(),unsubs=[];
+      
+      import{getAuth,
+             signInWithEmailAndPassword,
+             signOut,
+             onAuthStateChanged}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+      
+      import{getFirestore,
+             doc,
+             collection,
+             getDoc,
+             setDoc,
+             updateDoc,
+             onSnapshot}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+      
+      const firebaseConfig={apiKey:"AIzaSyAWbob6j02jTCAaFVqBsWoWxwekRS4Br8E",
+                            authDomain:"couple-daily-tracker.firebaseapp.com",
+                            projectId:"couple-daily-tracker",
+                            storageBucket:"couple-daily-tracker.firebasestorage.app",
+                            messagingSenderId:"566590935557",
+                            appId:"1:566590935557:web:13c0f91a0f20a8f4e1026c"};
+      
+      const USERS={"lAX05vlJA5bPkJElqXBcjWXBE3S2":{key:"me",name:"Zhen"},
+                   "SNJ4fIBT8IRHC9UUWIBpnEsaFfm2":{key:"sister",name:"Ting"}};
+      
+      const DEFAULT_TASKS=[{id:"sunscreen",emoji:"☀️",name:"擦防曬",description:"會曬黑噢",color:"#ff5a5a",type:"check",builtIn:true},
+                           {id:"study",emoji:"📖",name:"讀書",description:"1hr",color:"#79c85b",type:"check",builtIn:true},
+                           {id:"water",emoji:"🚰",name:"喝水",description:"700 c.c.",color:"#a45ac7",type:"counter",step:700,unit:"c.c.",max:20,builtIn:true}];
+      
+      const app=initializeApp(firebaseConfig),
+            auth=getAuth(app),
+            db=getFirestore(app),
+            tasksRef=doc(db,"shared","tasks");
+      
+      const $=id=>document.getElementById(id);
+      let tasks=DEFAULT_TASKS,
+          records={},
+          person=null,
+          selectedDate=new Date(),
+          calendarYear=selectedDate.getFullYear(),
+          calendarMonth=selectedDate.getMonth(),
+          unsubs=[];
+      
       function key(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}function emptyPerson(){const x={};tasks.forEach(t=>x[t.id]=t.type==="counter"?0:false);return x}function normalize(r={}){return{me:{...emptyPerson(),...(r.me||{})},sister:{...emptyPerson(),...(r.sister||{})}}}function esc(s){return String(s).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]))}
+      
       async function startSync(){unsubs.forEach(f=>f());unsubs=[];$("syncState").textContent="同步中…";const first=await getDoc(tasksRef);if(!first.exists())await setDoc(tasksRef,{items:JSON.parse(localStorage.getItem("checkinTasks"))||DEFAULT_TASKS});unsubs.push(onSnapshot(tasksRef,s=>{tasks=s.data()?.items||DEFAULT_TASKS;renderDaily();renderCalendar();$("syncState").textContent="已同步"}));unsubs.push(onSnapshot(collection(db,"records"),snap=>{records={};snap.forEach(d=>records[d.id]=normalize(d.data()));renderDaily();renderCalendar();$("syncState").textContent="已同步"}));if(!localStorage.getItem("firebaseMigrationV1")){const old=JSON.parse(localStorage.getItem("checkinRecords")||"{}");for(const[k,v]of Object.entries(old))await setDoc(doc(db,"records",k),normalize(v),{merge:true});localStorage.setItem("firebaseMigrationV1","1")}}
+      
       onAuthStateChanged(auth,async user=>{if(!user){$("login").classList.remove("hidden");return}const info=USERS[user.uid];if(!info){await signOut(auth);$("loginError").textContent="這個帳號沒有日曆權限";return}person=info;$("accountName").textContent=info.name;$("dailyPage").classList.toggle("ting",info.key==="sister");$("login").classList.add("hidden");await startSync()});
+      
       $("loginBtn").onclick=async()=>{try{$("loginError").textContent="";$("loginBtn").disabled=true;await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value)}catch(e){$("loginError").textContent="登入失敗，請檢查信箱和密碼"}finally{$("loginBtn").disabled=false}};$("password").onkeydown=e=>{if(e.key==="Enter")$("loginBtn").click()};$("logoutBtn").onclick=()=>signOut(auth);
+      
       function current(){return normalize(records[key(selectedDate)])[person.key]}function done(r,t){return t.type==="counter"?Number(r[t.id])>0:Boolean(r[t.id])}
+      
       function renderDaily(){if(!person)return;$("dailyYear").textContent=selectedDate.getFullYear();$("dailyDate").textContent=`${selectedDate.getMonth()+1}/${selectedDate.getDate()}`;const r=current();$("taskBox").innerHTML="";tasks.forEach(t=>{const row=document.createElement("div");row.className="task";const control=t.type==="counter"?`<div class="counter"><button data-count="${t.id}" data-delta="-1">−</button><div class="counter-value">${Number(r[t.id]||0)*Number(t.step||1)} ${esc(t.unit||"")}</div><button data-count="${t.id}" data-delta="1">+</button></div>`:`<button class="check ${r[t.id]?"done":""}" data-check="${t.id}">${r[t.id]?"✓":""}</button>`;row.innerHTML=`<div class="task-dot" style="background:${t.color}"></div><div class="task-main"><div class="task-title">${esc(t.emoji)} ${esc(t.name)}</div><div class="desc">${esc(t.description||"")}</div></div>${control}${t.builtIn?"":`<button class="delete" data-delete="${t.id}">×</button>`}`;$("taskBox").appendChild(row)})}
+      
       $("taskBox").onclick=async e=>{const id=e.target.dataset.check||e.target.dataset.count||e.target.dataset.delete;if(!id)return;if(e.target.dataset.delete){const t=tasks.find(x=>x.id===id);if(confirm(`確定刪除「${t.name}」嗎？`))await updateDoc(tasksRef,{items:tasks.filter(x=>x.id!==id)});return}const r=current();let value;if(e.target.dataset.check)value=!r[id];else{const t=tasks.find(x=>x.id===id);value=Math.max(0,Math.min(Number(t.max||99),Number(r[id]||0)+Number(e.target.dataset.delta)))}await setDoc(doc(db,"records",key(selectedDate)),{[person.key]:{[id]:value}},{merge:true})};
+      
       function addDot(box,color,who){const d=document.createElement("i");d.className=`dot ${who}`;d.style.background=color;box.appendChild(d)}function renderCalendar(){$("calendarGrid").innerHTML="";$("calendarTitle").textContent=`${calendarYear}.${calendarMonth+1}`;const first=new Date(calendarYear,calendarMonth,1).getDay(),days=new Date(calendarYear,calendarMonth+1,0).getDate();for(let i=0;i<first;i++){const x=document.createElement("div");x.className="day empty";$("calendarGrid").appendChild(x)}for(let n=1;n<=days;n++){const d=new Date(calendarYear,calendarMonth,n),r=records[key(d)]?normalize(records[key(d)]):null,b=document.createElement("div");b.className="day";if(selectedDate.getFullYear()===calendarYear&&selectedDate.getMonth()===calendarMonth&&selectedDate.getDate()===n)b.classList.add("selected");b.innerHTML=`<div class="day-number">${n}</div>`;const dots=document.createElement("div");dots.className="dots";if(r)tasks.forEach(t=>{if(done(r.me,t))addDot(dots,t.color,"me");if(done(r.sister,t))addDot(dots,t.color,"sister")});b.appendChild(dots);b.onclick=()=>{selectedDate=d;renderDaily();renderCalendar();$("pages").scrollTo({left:0,behavior:"smooth"})};$("calendarGrid").appendChild(b)}}
+      
       function month(n){calendarMonth+=n;if(calendarMonth>11){calendarMonth=0;calendarYear++}if(calendarMonth<0){calendarMonth=11;calendarYear--}renderCalendar()}$("prev").onclick=()=>month(-1);$("next").onclick=()=>month(1);
+      
       $("addBtn").onclick=()=>{$("taskModal").classList.add("open");$("fName").focus()};$("closeModal").onclick=()=>$("taskModal").classList.remove("open");$("taskModal").onclick=e=>{if(e.target===$("taskModal"))$("taskModal").classList.remove("open")};$("fType").onchange=()=>$("counterFields").classList.toggle("show",$("fType").value==="counter");
+      
       $("saveTask").onclick=async()=>{const name=$("fName").value.trim();if(!name)return alert("先幫事項取個名字啦");const t={id:`custom_${Date.now()}`,emoji:$("fEmoji").value.trim()||"✨",name,description:$("fDesc").value.trim(),color:$("fColor").value,type:$("fType").value,builtIn:false};if(t.type==="counter"){t.step=Math.max(1,Number($("fStep").value)||1);t.unit=$("fUnit").value.trim();t.max=Math.max(1,Math.min(99,Number($("fMax").value)||20))}await setDoc(tasksRef,{items:[...tasks,t]});$("taskModal").classList.remove("open");$("fName").value=""};
+      
       renderCalendar();
     </script>
   </body>
