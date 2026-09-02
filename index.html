@@ -61,7 +61,58 @@
         <div class="hint">往右滑回單日 →</div>
       </section>
     </div>
-<div class="overlay" id="taskModal"><div class="modal"><div class="modal-head">新增事項<button class="close" id="closeModal">×</button></div><div class="grid"><div class="row"><label>Emoji</label><input id="fEmoji" value="🚶" maxlength="4"></div><div class="row"><label>事項名稱</label><input id="fName" placeholder="例如：走路" maxlength="20"></div></div><div class="row"><label>小提醒</label><input id="fDesc" placeholder="例如：每次 1000 步" maxlength="40"></div><div class="grid"><div class="row"><label>顏色</label><input class="color" id="fColor" type="color" value="#f59e0b"></div><div class="row"><label>紀錄方式</label><select id="fType"><option value="check">完成／未完成</option><option value="counter">＋／－累計</option></select></div></div><div class="counter-fields" id="counterFields"><div class="grid"><div class="row"><label>每次增加</label><input id="fStep" type="number" min="1" value="1000"></div><div class="row"><label>單位</label><input id="fUnit" value="步" maxlength="8"></div></div><div class="row"><label>最多按幾次</label><input id="fMax" type="number" min="1" max="99" value="20"></div></div><button class="save" id="saveTask">新增</button><div class="note">Zhen 的月曆點是 100%，Ting 會自動顯示成 50%。</div></div></div>
+    <div class="overlay" id="taskModal">
+      <div class="modal">
+        <div class="modal-head">新增事項
+          <button class="close" id="closeModal">×</button>
+        </div>
+        <div class="grid">
+          <div class="row">
+            <label>Emoji</label>
+            <input id="fEmoji" value="💩" maxlength="4">
+          </div>
+          <div class="row">
+            <label>事項名稱</label>
+            <input id="fName" placeholder="例如：排遺" maxlength="20">
+          </div>
+        </div>
+        <div class="row">
+          <label>小提醒</label>
+          <input id="fDesc" placeholder="例如：一天不要太多次" maxlength="40">
+        </div>
+        <div class="grid">
+          <div class="row">
+            <label>顏色</label>
+            <input class="color" id="fColor" type="color" value="#f59e0b">
+          </div>
+          <div class="row">
+            <label>紀錄方式</label>
+            <select id="fType">
+              <option value="check">完成/未完成</option>
+              <option value="counter">＋/－累計</option>
+            </select>
+          </div>
+        </div>
+        <div class="counter-fields" id="counterFields">
+          <div class="grid">
+            <div class="row">
+              <label>每次增加</label>
+              <input id="fStep" type="number" min="1" value="1000">
+            </div>
+            <div class="row">
+              <label>單位</label>
+              <input id="fUnit" value="步" maxlength="8">
+            </div>
+          </div>
+          <div class="row">
+            <label>最多按幾次</label>
+            <input id="fMax" type="number" min="1" max="99" value="20">
+          </div>
+        </div>
+        <button class="save" id="saveTask">新增</button>
+        <div class="note">Zhen的月曆點是100%，Ting會自動顯示成50%。</div>
+      </div>
+    </div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
