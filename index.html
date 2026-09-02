@@ -18,12 +18,12 @@
  <div class="row"><label>小提醒</label><input id="fDesc" placeholder="例如：每次 1000 步" maxlength="40"></div>
  <div class="grid"><div class="row"><label>顏色</label><input class="color" id="fColor" type="color" value="#f59e0b"></div><div class="row"><label>紀錄方式</label><select id="fType" onchange="counterFields.classList.toggle('show',this.value==='counter')"><option value="check">完成／未完成</option><option value="counter">＋／－累計</option></select></div></div>
  <div class="counter-options" id="counterFields"><div class="grid"><div class="row"><label>每次增加</label><input id="fStep" type="number" min="1" value="1000"></div><div class="row"><label>單位</label><input id="fUnit" value="步" maxlength="8"></div></div><div class="row"><label>最多按幾次</label><input id="fMax" type="number" min="1" max="99" value="20"></div></div>
- <button class="save" onclick="addTask()">新增</button><div class="note">顏色選一次即可：Zhen 的月曆點是 100%，Ting 會自動變成 50%。自訂事項右邊的 × 可以刪除。</div>
+ <button class="save" onclick="addTask()">新增</button><div class="note">顏色選一次即可：Zhen的月曆點是 100%，Ting會自動變成 50%。自訂事項右邊的 × 可以刪除。</div>
 </div></div>
 <script>
 const DEFAULT_TASKS=[
  {id:"sunscreen",emoji:"☀️",name:"擦防曬",description:"會曬黑噢",color:"#ff5a5a",type:"check",builtIn:true},
- {id:"study",emoji:"📖",name:"讀書",description:"讀書1小時",color:"#79c85b",type:"check",builtIn:true},
+ {id:"study",emoji:"📖",name:"讀書",description:"1小時",color:"#79c85b",type:"check",builtIn:true},
  {id:"water",emoji:"🚰",name:"喝水",description:"700 c.c.",color:"#a45ac7",type:"counter",step:700,unit:"c.c.",max:2,builtIn:true}
 ];
 const today=new Date();let selectedDate=new Date(today.getFullYear(),today.getMonth(),today.getDate()),calendarYear=selectedDate.getFullYear(),calendarMonth=selectedDate.getMonth(),selectedPerson="me";
