@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>雙人打卡日曆</title>
+  <title>打卡日曆</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, "Noto Sans TC", sans-serif; background: #f7f7f7; overflow: hidden; }
@@ -67,24 +67,24 @@
     <section class="page daily-page" id="dailyPage">
       <div class="year" id="dailyYear"></div>
       <div class="date" id="dailyDate"></div>
-      <div class="person-switch" aria-label="選擇打卡的人">
-        <button class="person-button active" id="meButton" onclick="selectPerson('me')">我</button>
-        <button class="person-button sister" id="sisterButton" onclick="selectPerson('sister')">妹妹</button>
+      <div class="person-switch" aria-label="你是誰⊙o⊙">
+        <button class="person-button active" id="meButton" onclick="selectPerson('me')">Zhen</button>
+        <button class="person-button sister" id="sisterButton" onclick="selectPerson('sister')">Ting</button>
       </div>
       <div class="task-box">
         <div class="task">
           <div class="task-dot red"></div>
-          <div class="task-main"><div class="task-title">☀️ 擦防曬</div><div class="task-description">今天有乖乖擦防曬嗎</div></div>
+          <div class="task-main"><div class="task-title">☀️ 擦防曬</div><div class="task-description">會曬黑噢</div></div>
           <button class="check-button" id="sunscreenButton" onclick="toggleTask('sunscreen')" aria-label="切換防曬打卡"></button>
         </div>
         <div class="task">
           <div class="task-dot green"></div>
-          <div class="task-main"><div class="task-title">📖 讀書</div><div class="task-description">讀書 1 小時</div></div>
+          <div class="task-main"><div class="task-title">📖 讀書</div><div class="task-description">讀書1小時</div></div>
           <button class="check-button" id="studyButton" onclick="toggleTask('study')" aria-label="切換讀書打卡"></button>
         </div>
         <div class="task">
           <div class="task-dot purple"></div>
-          <div class="task-main"><div class="task-title">🚰 喝水</div><div class="task-description">一次代表 700 cc</div></div>
+          <div class="task-main"><div class="task-title">🚰 喝水</div><div class="task-description">一次代表700cc</div></div>
           <div class="water-controls">
             <button class="water-button" onclick="changeWater(-1)" aria-label="減少喝水次數">−</button>
             <div class="water-count" id="waterCount">0</div>
@@ -106,8 +106,8 @@
       </div>
       <div class="calendar-grid" id="calendarGrid"></div>
       <div class="legend">
-        <div class="legend-item"><span class="legend-dot"></span>我的打卡</div>
-        <div class="legend-item"><span class="legend-dot sister"></span>妹妹的打卡</div>
+        <div class="legend-item"><span class="legend-dot"></span>Zhen's打卡</div>
+        <div class="legend-item"><span class="legend-dot sister"></span>Ting's打卡</div>
       </div>
       <div class="swipe-hint">往右滑回單日 →</div>
     </section>
