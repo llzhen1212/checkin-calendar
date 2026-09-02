@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>雙人打卡日曆</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      background: #f7f7f7;
+      overflow: hidden;
+    }
+
+    /* =========================
+       左右滑動主區域
+    ========================= */
+    .pages {
+      width: 100vw;
+      height: 100vh;
+
+      display: flex;
+
+      overflow-x: auto;
+      overflow-y: hidden;
+
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+
+      scrollbar-width: none;
+    }
+
+    .pages::-webkit-scrollbar {
+      display: none;
+    }
+
+    .page {
+      min-width: 100vw;
+      width: 100vw;
+      height: 100vh;
+
+      scroll-snap-align: start;
+
+      padding: 28px 20px;
+    }
+
+    /* =========================
+       單日頁
+    ========================= */
+    .daily-page {
+      background: #fffdf7;
+    }
+
+    .year {
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 4px;
+    }
+
+    .date {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 30px;
+    }
+
+    .task-box {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+    }
+
+    .task {
+      min-height: 65px;
+
+      display: flex;
+      align-items: center;
+
+      gap: 12px;
+
+      border-bottom: 1px solid #eee;
+    }
+
+    .task:last-child {
+      border-bottom: none;
+    }
+
+    .task-dot {
+      width: 11px;
+      height: 11px;
+
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .red {
+      background: #ff5a5a;
+    }
+
+    .green {
+      background: #79c85b;
+    }
+
+    .purple {
+      background: #a45ac7;
+    }
+
+    .task-main {
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .task-description {
+      margin-top: 3px;
+      color: #999;
+      font-size: 13px;
+    }
+
+    .check-button {
+      width: 34px;
+      height: 34px;
+
+      border-radius: 10px;
+
+      border: 2px solid #ddd;
+      background: white;
+
+      font-size: 18px;
+
+      cursor: pointer;
+    }
+
+    .check-button.done {
+      background: #222;
+      border-color: #222;
+      color: white;
+    }
+
+    /* 喝水 */
+    .water-controls {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .water-button {
+      width: 32px;
+      height: 32px;
+
+      border: none;
+      border-radius: 9px;
+
+      background: #eeeeee;
+
+      font-size: 18px;
+
+      cursor: pointer;
+    }
+
+    .water-count {
+      min-width: 28px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .swipe-hint {
+      text-align: center;
+
+      margin-top: 30px;
+
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    /* =========================
+       月曆頁
+    ========================= */
+    .calendar-page {
+      background: #f5f9ff;
+    }
+
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      margin-bottom: 25px;
+    }
+
+    .calendar-title {
+      font-size: 30px;
+      font-weight: bold;
+    }
+
+    .month-button {
+      border: none;
+      background: white;
+
+      width: 38px;
+      height: 38px;
+
+      border-radius: 12px;
+
+      font-size: 19px;
+
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+
+      cursor: pointer;
+    }
+
+    .weekdays,
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .weekday {
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+
+      padding-bottom: 12px;
+    }
+
+    .calendar-grid {
+      background: white;
+
+      border-radius: 18px;
+      overflow: hidden;
+
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    .calendar-day {
+      position: relative;
+
+      height: 72px;
+
+      padding: 7px;
+
+      border-right: 1px solid #eee;
+      border-bottom: 1px solid #eee;
+
+      cursor: pointer;
+    }
+
+    .calendar-day:nth-child(7n) {
+      border-right: none;
+    }
+
+    .calendar-day.empty {
+      background: #fafafa;
+      cursor: default;
+    }
+
+    .calendar-day.selected {
+      background: #edf5ff;
+    }
+
+    .day-number {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .dots {
+      position: absolute;
+
+      left: 7px;
+      bottom: 7px;
+
+      display: flex;
+      gap: 3px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    @media (max-width: 500px) {
+      .page {
+        padding: 24px 16px;
+      }
+
+      .calendar-day {
+        height: 62px;
+      }
+
+      .date {
+        font-size: 38px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="pages" id="pages">
+
+    <!-- ======================
+         第一頁：單日
+    ======================= -->
+    <section class="page daily-page">
+
+      <div class="year" id="dailyYear"></div>
+      <div class="date" id="dailyDate"></div>
+
+      <div class="task-box">
+
+        <!-- 防曬 -->
+        <div class="task">
+
+          <div class="task-dot red"></div>
+
+          <div class="task-main">
+            <div class="task-title">
+              ☀️ 擦防曬
+            </div>
+
+            <div class="task-description">
+              今天有乖乖擦防曬嗎
+            </div>
+          </div>
+
+          <button
+            class="check-button"
+            id="sunscreenButton"
+            onclick="toggleTask('sunscreen')"
+          >
+          </button>
+
+        </div>
+
+        <!-- 讀書 -->
+        <div class="task">
+
+          <div class="task-dot green"></div>
+
+          <div class="task-main">
+            <div class="task-title">
+              📖 讀書
+            </div>
+
+            <div class="task-description">
+              讀書 1 小時
+            </div>
+          </div>
+
+          <button
+            class="check-button"
+            id="studyButton"
+            onclick="toggleTask('study')"
+          >
+          </button>
+
+        </div>
+
+        <!-- 喝水 -->
+        <div class="task">
+
+          <div class="task-dot purple"></div>
+
+          <div class="task-main">
+            <div class="task-title">
+              🚰 喝水
+            </div>
+
+            <div class="task-description">
+              一次代表 700 cc
+            </div>
+          </div>
+
+          <div class="water-controls">
+
+            <button
+              class="water-button"
+              onclick="changeWater(-1)"
+            >
+              −
+            </button>
+
+            <div
+              class="water-count"
+              id="waterCount"
+            >
+              0
+            </div>
+
+            <button
+              class="water-button"
+              onclick="changeWater(1)"
+            >
+              +
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="swipe-hint">
+        ← 往左滑看月曆
+      </div>
+
+    </section>
+
+
+    <!-- ======================
+         第二頁：月曆
+    ======================= -->
+    <section class="page calendar-page">
+
+      <div class="calendar-header">
+
+        <button
+          class="month-button"
+          onclick="changeMonth(-1)"
+        >
+          ‹
+        </button>
+
+        <div
+          class="calendar-title"
+          id="calendarTitle"
+        ></div>
+
+        <button
+          class="month-button"
+          onclick="changeMonth(1)"
+        >
+          ›
+        </button>
+
+      </div>
+
+      <div class="weekdays">
+        <div class="weekday">日</div>
+        <div class="weekday">一</div>
+        <div class="weekday">二</div>
+        <div class="weekday">三</div>
+        <div class="weekday">四</div>
+        <div class="weekday">五</div>
+        <div class="weekday">六</div>
+      </div>
+
+      <div
+        class="calendar-grid"
+        id="calendarGrid"
+      ></div>
+
+      <div class="swipe-hint">
+        往右滑回單日 →
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <script>
+
+    /* =========================
+       日期
+    ========================= */
+
+    const today = new Date();
+
+    let selectedDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+
+    let calendarYear = selectedDate.getFullYear();
+    let calendarMonth = selectedDate.getMonth();
+
+
+    /* =========================
+       localStorage
+    ========================= */
+
+    let records =
+      JSON.parse(localStorage.getItem("checkinRecords")) || {};
+
+
+    function saveRecords() {
+      localStorage.setItem(
+        "checkinRecords",
+        JSON.stringify(records)
+      );
+    }
+
+
+    /* =========================
+       日期 key
+       例如 2026-08-30
+    ========================= */
+
+    function getDateKey(date) {
+
+      const year = date.getFullYear();
+
+      const month =
+        String(date.getMonth() + 1).padStart(2, "0");
+
+      const day =
+        String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    }
+
+
+    function getSelectedRecord() {
+
+      const key = getDateKey(selectedDate);
+
+      if (!records[key]) {
+
+        records[key] = {
+          sunscreen: false,
+          study: false,
+          water: 0
+        };
+
+      }
+
+      return records[key];
+    }
+
+
+    /* =========================
+       更新單日頁
+    ========================= */
+
+    function renderDailyPage() {
+
+      document.getElementById("dailyYear").textContent =
+        selectedDate.getFullYear();
+
+      document.getElementById("dailyDate").textContent =
+        `${selectedDate.getMonth() + 1}/${selectedDate.getDate()}`;
+
+      const record = getSelectedRecord();
+
+
+      /* 防曬 */
+
+      const sunscreenButton =
+        document.getElementById("sunscreenButton");
+
+      sunscreenButton.textContent =
+        record.sunscreen ? "✓" : "";
+
+      sunscreenButton.classList.toggle(
+        "done",
+        record.sunscreen
+      );
+
+
+      /* 讀書 */
+
+      const studyButton =
+        document.getElementById("studyButton");
+
+      studyButton.textContent =
+        record.study ? "✓" : "";
+
+      studyButton.classList.toggle(
+        "done",
+        record.study
+      );
+
+
+      /* 喝水 */
+
+      document.getElementById("waterCount").textContent =
+        record.water;
+
+    }
+
+
+    /* =========================
+       打卡
+    ========================= */
+
+    function toggleTask(taskName) {
+
+      const record = getSelectedRecord();
+
+      record[taskName] = !record[taskName];
+
+      saveRecords();
+
+      renderDailyPage();
+      renderCalendar();
+    }
+
+
+    /* =========================
+       喝水
+       0 = 0 cc
+       1 = 700 cc
+       2 = 1400 cc
+    ========================= */
+
+    function changeWater(change) {
+
+      const record = getSelectedRecord();
+
+      record.water += change;
+
+      if (record.water < 0) {
+        record.water = 0;
+      }
+
+      if (record.water > 2) {
+        record.water = 2;
+      }
+
+      saveRecords();
+
+      renderDailyPage();
+      renderCalendar();
+    }
+
+
+    /* =========================
+       月曆
+    ========================= */
+
+    function renderCalendar() {
+
+      const grid =
+        document.getElementById("calendarGrid");
+
+      grid.innerHTML = "";
+
+
+      document.getElementById("calendarTitle").textContent =
+        `${calendarYear}.${calendarMonth + 1}`;
+
+
+      const firstDay =
+        new Date(
+          calendarYear,
+          calendarMonth,
+          1
+        ).getDay();
+
+
+      const daysInMonth =
+        new Date(
+          calendarYear,
+          calendarMonth + 1,
+          0
+        ).getDate();
+
+
+      /* 前面的空格 */
+
+      for (let i = 0; i < firstDay; i++) {
+
+        const empty =
+          document.createElement("div");
+
+        empty.className =
+          "calendar-day empty";
+
+        grid.appendChild(empty);
+
+      }
+
+
+      /* 日期 */
+
+      for (
+        let day = 1;
+        day <= daysInMonth;
+        day++
+      ) {
+
+        const date =
+          new Date(
+            calendarYear,
+            calendarMonth,
+            day
+          );
+
+        const key =
+          getDateKey(date);
+
+        const record =
+          records[key];
+
+
+        const dayBox =
+          document.createElement("div");
+
+        dayBox.className =
+          "calendar-day";
+
+
+        /* 選中的日期 */
+
+        if (
+          selectedDate.getFullYear() === calendarYear &&
+          selectedDate.getMonth() === calendarMonth &&
+          selectedDate.getDate() === day
+        ) {
+
+          dayBox.classList.add("selected");
+
+        }
+
+
+        const number =
+          document.createElement("div");
+
+        number.className =
+          "day-number";
+
+        number.textContent =
+          day;
+
+        dayBox.appendChild(number);
+
+
+        /* 彩色點 */
+
+        const dots =
+          document.createElement("div");
+
+        dots.className =
+          "dots";
+
+
+        if (record) {
+
+          if (record.sunscreen) {
+
+            dots.innerHTML +=
+              `<div class="dot red"></div>`;
+
+          }
+
+          if (record.study) {
+
+            dots.innerHTML +=
+              `<div class="dot green"></div>`;
+
+          }
+
+          if (record.water > 0) {
+
+            dots.innerHTML +=
+              `<div class="dot purple"></div>`;
+
+          }
+
+        }
+
+
+        dayBox.appendChild(dots);
+
+
+        /* 點日期 */
+
+        dayBox.addEventListener(
+          "click",
+          function () {
+
+            selectedDate =
+              new Date(
+                calendarYear,
+                calendarMonth,
+                day
+              );
+
+            renderDailyPage();
+            renderCalendar();
+
+            /* 自動回第一頁 */
+
+            document
+              .getElementById("pages")
+              .scrollTo({
+                left: 0,
+                behavior: "smooth"
+              });
+
+          }
+        );
+
+
+        grid.appendChild(dayBox);
+
+      }
+
+    }
+
+
+    /* =========================
+       上個月 / 下個月
+    ========================= */
+
+    function changeMonth(change) {
+
+      calendarMonth += change;
+
+      if (calendarMonth > 11) {
+        calendarMonth = 0;
+        calendarYear++;
+      }
+
+      if (calendarMonth < 0) {
+        calendarMonth = 11;
+        calendarYear--;
+      }
+
+      renderCalendar();
+    }
+
+
+    /* =========================
+       啟動
+    ========================= */
+
+    renderDailyPage();
+    renderCalendar();
+
+  </script>
+
+</body>
+</html>
